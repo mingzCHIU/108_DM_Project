@@ -1,0 +1,398 @@
+---
+title: "博士工廠的產品汰率"
+subtitle: "探討理學博士就學與就業情形"
+author: "邱銘姿（生命所）、邱奕升（教育所）"
+institute: "108-2 資料管理"
+date: "2020/6/15"
+output:
+  xaringan::moon_reader:
+    css: [default, zh-CN.css]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/1.JPG)
+background-size: 700px
+background-position: 50% 40%
+
+## Introduction
+
+.footnote[
+Cyranoski, D., Gilbert, N., Ledford, H. et al. (2011). *Education: The PhD factory. Nature, 472*, 276–279. https://doi.org/10.1038/472276a
+]
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/2.JPG)
+background-size: 550px
+background-position: 50% 50%
+
+---
+然而，面臨求職困境，
+
+臺灣的博士畢業生愈來愈少
+
+--
+
+### 這不禁讓我們好奇
+
+###- 現今博士畢業生的**就學**與**就業**情形
+
+###- 其於博士學程的訓練是否得以提供未來就職所需的技能培訓？ 
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/3.JPG)
+background-size: 600px
+background-position: 90% 80%
+
+# Data 
+
+- 調查對象 : 在美國多間大專院校獲得生物、物理、資訊、社會科學或工程領域博士學位且在美國就業的博士
+
+- 調查區間 : 2004 - 2014 年間
+
+- 調查方式 : 線上問卷
+
+- 樣本數 : 8,099
+
+---
+# Data
+
+### 問卷內容
+
+- 包含職業興趣、工作內容、當前工作、職業選擇動機等問題
+
+--
+
+分成三類：就學期間 (Education)、博士後研究 (Postdoctoral Training)、就業 (Employment)
+
+  - 就學期間：博士學程領域、學科、課程調查
+
+  - 博士後研究：是否已完成博士後研究訓練，或是正在進行中/(已完成者)具有幾年博後經驗
+  - 就業：目前職位頭銜、目前任職單位
+
+---
+
+- 可移轉技能、應用技能 Transferable skills
+
+15 個選項，參考《*Next Gen PhD: A Guide to Career Paths in Science*》(Sinche, 2016)
+
+包含 : 
+
+```{r echo=FALSE}
+skill <- data.frame(Number = c(1:15), Ability = c("專業知識", "資訊收集與解釋", "資料分析", "創意/創新思考", "口頭溝通", "決策與解決問題能力", "書寫溝通", "團隊合作", "領導管理他人", "管理計畫",  "時間管理", "設立願景與目標", "職涯規劃與自覺", "快速學習", "與外人合作"))
+knitr::kable(skill)
+```
+
+- 工作滿意度 : 五點量表
+
+
+---
+
+## Aim
+
+--
+
+- 近年來，理學博士畢業生的就業場域類型為何？ 
+
+--
+
+- 理學博士畢業生認為博士學程提供的訓練是否得以應用於未來職場？
+
+--
+
+- 理學博士生的就學與畢業後就業情形在不同性別的情形？ 
+
+---
+## 資料整理
+
+```yaml
+library(foreign)
+dta <- data.frame(read.spss("./journal.pone.0185023.s001.sav"))
+dta
+```
+
+```{r include=FALSE}
+library(foreign)
+dta <- data.frame(read.spss("journal.pone.0185023.s001.sav"))
+dta
+```
+
+---
+```{r}
+str(dta)
+```
+
+---
+### 初步資料整理
+
+- 將細節資訊 (e.g. 學程名稱、職業頭銜、其他選項等)刪除
+
+- 各項量表改以數值呈現
+
+- 移除有遺漏值的樣本
+
+- 篩選和探討問題相關的資料
+
+```{r include=FALSE}
+library(dplyr)
+library(magrittr)
+dta %<>% dplyr::select(-(2:4),-6,-22,-(26:36),-(38:39), -(41:42), -44, -46, -(48:162), -178)
+```
+
+```{r include=FALSE}
+# Scale of transferable skills
+dta[3:17] <- with(dta, ifelse(dta[3:17] == "strongly agree", 5, ifelse(dta[3:17] =="agree", 4, ifelse(dta[3:17] == "neutral", 3, ifelse(dta[3:17] == "disagree", 2, ifelse(dta[3:17] == "strongly disagree", 1, 0)))))) 
+dta[26:40] <- with(dta, ifelse(dta[26:40] == "strongly agree", 5, ifelse(dta[26:40] =="agree", 4, ifelse(dta[26:40] == "neutral", 3, ifelse(dta[26:40] == "disagree", 2, ifelse(dta[26:40] == "strongly disagree", 1, 0))))))
+
+# PostdocTrain
+dta[18] <- with(dta, ifelse(dta[18] == "Yes, I have been a postdoc in the past", "2", ifelse(dta[18] =="Yes, I am currently working as a postdoc", "1", 0)))
+
+# Postdoc Years
+dta$PostDocTotYrs[dta$PostDocTotYrs == "1 or less (0)"] <- 1
+dta$PostDocTotYrs <- as.numeric(dta$PostDocTotYrs)
+
+# Employ Status
+dta[23] <- with(dta, ifelse(dta[23] == "Working full-time in a position other than a postdoc", "1", ifelse(dta[23] =="Working part-time in a position other than a postdoc", "2", ifelse(dta[23] == "Interning / volunteering with an organization to gain professional experience", "3", ifelse(dta[23] == "Enrolled part-time or full-time in an academic program", "4", ifelse(dta[23] == "Unemployed but seeking work", "5", ifelse(dta[23] == "Unemployed and not seeking work", "6", ifelse(dta[23] == "Other", "7", 0))))))))
+
+# RI_NRI
+dta[24] <- with(dta, ifelse(dta[24] == "Non Research Intensive", "NRI", ifelse(dta[24] == "Research Intensive", "RI", 0)))
+
+# 移除遺漏值
+dta <- na.omit(dta)
+
+str(dta)
+```
+
+最後得到的資料為
+
+```{r}
+dim(dta)
+```
+
+---
+### Q1 理學博士的就業場域類型為何？
+
+**就業情形**
+
+```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+ggplot(dta) + geom_histogram(aes(x= Employ_Status1), stat = "count")+
+  scale_x_discrete(labels = c("Full-time", "Part-time", "Intern", "Enrolled in academic program", "Other" ))+
+  xlab("Employ Status (other than Postdoc)")+ ylab("Count")
+```
+
+---
+**職業類型**
+
+```{r eval=FALSE, include=FALSE}
+table(dta$Career_Cats)
+```
+
+```{r echo=FALSE}
+career <- data.frame(Number = c(1:14), Category = c("研究", "研究", "研究", "研究", "非研究", "非研究", "非研究", "非研究", "非研究", "非研究", "非研究", "非研究", "非研究", "非研究"),  Career = c("學術非終生職", "政府單位研究工作者", "業界研究工作者", "學術終生職", "行政職", "業務", "諮詢顧問", "知識產權", "監管", "學術寫作與科學傳播", "教學", "科學政策", "其他", "實習"), Count = c(272, 213, 301, 467, 232, 54, 63, 26, 15, 49, 295, 37, 69, 10))
+knitr::kable(career)
+```
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/4.JPG)
+background-size: 250px
+background-position: 90% 80%
+```{r echo=FALSE}
+plot(table(dta$Career_Cats),
+     xlab="Career Categories", ylab="Count", 
+     xaxt="none", ylim = c(0, 550))
+axis(1, seq(0, 14, 1), cex.axis=0.8)
+```
+
+---
+### Q2 理學博士畢業生認為博士學程提供的訓練是否得以應用於未來職場？
+
+挑出可轉移能力相關的資料，分組轉成長形後，再合併。
+
+```{r include=FALSE}
+library(reshape2)
+library(tidyr)
+doc_skill <- melt(subset(dta, select=c(1,3:17)), id.vars = "SUBJ_ID")
+doc_skill %<>% rename(ID = SUBJ_ID, Doc = value) %>% separate(variable, c("prefix", "doc", "skill")) %>% 
+  dplyr::select(-c(prefix, doc)) 
+doc_skill
+```
+
+```{r include=FALSE}
+library(readr)
+emp_skill <- melt(subset(dta, select = c(1, 26:40)), id.vars = "SUBJ_ID")
+emp_skill %<>% rename(ID = SUBJ_ID, Emp = value) %>% separate(variable, c("prefix", "emp", "sk")) %>% 
+  mutate(skill = parse_number(sk)) %>% dplyr::select(-c(prefix, emp, sk)) 
+head(emp_skill)
+```
+
+```{r include=FALSE}
+dta2 <- doc_skill %>% mutate(Emp = emp_skill$Emp)
+dta2$skill <- factor(dta2$skill, levels = c(1:15))
+```
+
+```{r}
+head(dta2)
+```
+
+```{r}
+dim(dta2)
+```
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/5.JPG)
+background-size: 250px
+background-position: 90% 80%
+
+### 就業前後所認為可轉移能力的重要性
+
+```{r echo=FALSE, fig.align='left'}
+dta2_docorder <- with(dta2, reorder(skill, Doc, FUN=mean, na.rm=T))
+par(mfrow = c(1, 2))
+boxplot(Doc ~ dta2_docorder, data = dta2, horizontal = T, varwidth = T, cex.axis = .6, xlab = "Doctoral Program", ylab = "Transferable Skill")
+boxplot(Emp ~ dta2_docorder, data = dta2, horizontal = T, varwidth = T, cex.axis = .6, xlab = "Employment", ylab = "Transferable Skill")
+```
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/5.JPG)
+background-size: 250px
+background-position: 90% 80%
+
+### 對可轉移能力重要性的判斷與科系的關係
+
+```{r include=FALSE}
+aca_docskill <- melt(subset(dta, select=c(1:17)), id.vars = c("SUBJ_ID", "Acad_Area_Cat"))
+aca_docskill %<>% rename(ID = SUBJ_ID, Doc = value) %>% separate(variable, c("prefix", "doc", "skill")) %>% 
+  dplyr::select(-c(prefix, doc))
+
+aca_empskill <- melt(subset(dta, select = c(1:2, 26:40)), id.vars = c("SUBJ_ID", "Acad_Area_Cat"))
+aca_empskill %<>% rename(ID = SUBJ_ID, Emp = value) %>% separate(variable, c("prefix", "emp", "sk")) %>% 
+  mutate(skill = parse_number(sk)) %>% dplyr::select(-c(prefix, emp, sk)) 
+
+dta2_aca <- aca_docskill %>% mutate(Emp = aca_empskill$Emp)
+dta2_aca$skill <- factor(dta2_aca$skill, levels = c(1:15))
+```
+
+```{r echo=FALSE}
+ggplot(dta2_aca, aes(skill, Acad_Area_Cat))+
+  geom_tile(aes(fill = Doc), color = "white")+
+  scale_fill_gradient(low = "white", high = "darkblue")+
+  xlab("Transferable Skill")+ylab("Academic Area")
+```
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/5.JPG)
+background-size: 250px
+background-position: 90% 80%
+
+### 對可轉移能力重要性的判斷與職業類別的關係
+
+```{r include=FALSE}
+car_docskill <- melt(subset(dta, select=c(1, 3:17, 25)), id.vars = c("SUBJ_ID", "Career_Cats"))
+car_docskill %<>% rename(ID = SUBJ_ID, Doc = value) %>% separate(variable, c("prefix", "doc", "skill")) %>% 
+  dplyr::select(-c(prefix, doc))
+
+car_empskill <- melt(subset(dta, select = c(1, 25:40)), id.vars = c("SUBJ_ID", "Career_Cats"))
+car_empskill %<>% rename(ID = SUBJ_ID, Emp = value) %>% separate(variable, c("prefix", "emp", "sk")) %>% 
+  mutate(skill = parse_number(sk)) %>% dplyr::select(-c(prefix, emp, sk)) 
+
+dta2_car <- car_docskill %>% mutate(Emp = car_empskill$Emp)
+dta2_car$skill <- factor(dta2_car$skill, levels = c(1:15))
+```
+
+```{r echo=FALSE}
+ggplot(dta2_car, aes(skill, Career_Cats))+
+  geom_tile(aes(fill = Emp), color = "white")+
+  scale_fill_gradient(low = "lightpink", high = "darkred")+
+  xlab("Transferable Skill")+ylab("Career Category")
+```
+
+---
+### Q3 理學博士生畢業後就業情形是否受性別影響？
+
+---
+### 不同性別各領域博士從事博士後研究時間
+```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+ggplot(dta) + geom_boxplot(aes(x = Acad_Area_Cat, y = PostDocTotYrs))+ facet_grid(.~ Gender2_bivar)+
+  theme(axis.text.x = element_text(angle = 90))+ scale_y_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))+
+  xlab("Academic Area")+ ylab("Postdoc Total Years")
+```
+
+---
+### 不同領域、性別間職業情形
+
+```{r echo=FALSE, fig.height=6, fig.width=10, fig.align='center'}
+ggplot(dta) + geom_histogram(aes(x= Employ_Status1), stat = "count")+ facet_wrap(.~ Gender2_bivar + Acad_Area_Cat, ncol = 5)+
+  scale_x_discrete(labels = c("Full-time", "Part-time", "Intern", "Enrolled in academic program", "Other" ))+ theme(axis.text.x = element_text(angle = 90))+
+  xlab("Employ Status (other than Postdoc)")+ ylab("Count")
+```
+---
+# Conclusion
+
+- 在美國，多數科學博士皆有順利於畢業後找到工作
+
+- 職業類型以研究工作為主，而且不僅是高等教育的終身/非終身職教授，從事非研究的教育相關行業者也不少。
+
+- 博士班就學期間，重點培養的可轉移能力多在專業知識的資料蒐集、整理與分析，對於擴大合作圈、領導能力及職涯規劃探索的能力較缺乏。就業後，絕大部分所調查的可轉移能力皆在各職場中被視為非常重要。
+
+- 社會科學類群的則相對重視**決策與問題解決能力**及**團隊合作能力**。
+
+- 從事非研究工作者，相對沒那麼強調**專業知識**，認為**溝通與經營管理能力**是更重要的。
+
+- 女性科學博士畢業後進入博士後研究階段的時間較男性短。
+
+- 不管男性女性，生物領域的博士從事博士後研究的時間較其他學科領域長 。
+
+- 畢業後就業情形，女性生物博士取得正職的人數較男性多。
+
+---
+# Discusion
+
+- 過去十年高等教育分類細化，人才需求大，可能與當今學術與產業界之供需情形有些脫節。
+
+- 調查對象以生物領域博士為主，學科背景較不均勻。
+
+- 美國業界發展較臺灣繁盛，工作種類多。
+
+- 臺灣與美國的就學環境、習性、業界生態不同，不可類比，應加入臺灣本土資料。
+
+- 念博不僅要累積專業知識，可移轉能力的培養尤為重要，然而這些並非從課堂上學習。除了埋首於知識研究，發散與收斂思考及與他人相處共事也是需要下功夫的。
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/7.JPG)
+background-size: 550px
+background-position: 90% 90%
+
+# Discusion
+
+###臺灣博士生調查
+
+ [教育部統計處](https://depart.moe.edu.tw/ED4500/cp.aspx?n=002F646AFF7F5492&s=1EA96E4785E6838F)
+
+- 基本調查
+
+- 原始資料無公開，僅公開統計分析結果
+
+---
+background-image: url(https://raw.githubusercontent.com/mingzCHIU/108_DM_Project/figure/6.JPG)
+background-size: 420px
+background-position: 90% 90%
+
+### 臺灣博士生調查
+
+[學術調查研究資料庫](https://srda.sinica.edu.tw/browsingbydatatype_result.php?category=surveymethod&type=1&csid=23)
+
+- 財團法人國家實驗研究院科技政策研究與資訊中心的「科技人才與研究成果服務平台」(NPHRST)
+
+- 針對國內已取得博士之人才進行調查
+
+- 調查詳細
+
+- 原始資料有條件公開，**目前尚未取得資料閱權資格**
+
+---
+
+---
+
